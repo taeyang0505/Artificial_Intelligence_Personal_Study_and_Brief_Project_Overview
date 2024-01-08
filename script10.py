@@ -3,7 +3,6 @@
 # stats.poisson.rvs(lambda, size = num_values)
 // rvs = stats.poisson.rvs(10, size = 1000)
 
-
 import scipy.stats as stats
 import codecademylib3
 
@@ -19,3 +18,11 @@ print(rand_vars.mean())
 
 ## Checkpoint 3
 histogram_function(rand_vars)
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def histogram_function(rand_vars):
+  plt.hist(rand_vars, bins = np.arange(len(set(rand_vars)))-0.5, edgecolor = "black")
+  plt.xticks(list(range(rand_vars.max())))
+  plt.show()
