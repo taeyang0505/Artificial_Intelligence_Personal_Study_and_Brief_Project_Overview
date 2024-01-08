@@ -7,6 +7,7 @@
   // rand_vars = stats.poisson.rvs(4, size = 1000)
   // print(np.var(rand_vars))
 
+// Another way to view the increase in possible values is to take the range of a sample (the minimum and maximum values in a set)
 // print the minimum and maximum values observed using the .min() and .max() Python functions
 
   // import scipy.stats as stats
