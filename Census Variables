@@ -1,0 +1,33 @@
+import codecademylib3
+
+# Import pandas with alias
+import pandas as pd
+
+# Read in the census dataframe
+census = pd.read_csv('census_data.csv', index_col=0)
+
+print(census.head())
+print(census.dtypes)
+print(census['birth_year'].unique())
+
+census['birth_year'] = census['birth_year'].replace(['missing'], 1967)
+print(census['birth_year'].unique())
+
+census['birth_year'] = census['birth_year'].astype(int)
+print(census.dtypes)
+
+print(census['birth_year'].mean())
+
+census['higher_tax'] = pd.Categorical(census['higher_tax'], ['strongly disagree', 'disagree', 'neutral', 'agree', 'strongly agree'], ordered = True)
+print(census['higher_tax'].unique())
+
+census['higher_tax'] = census['higher_tax'].cat.codes
+print(census['higher_tax'].median())
+
+census['marital_codes'] = census['marital_status'].astype('category').cat.codes
+census = pd.get_dummies(census, columns=['marital_status'])
+bins = range(1900, 2025, 5)  # 5년 단위로 그룹화
+labels = [f"{i}-{i+4}" for i in bins[:-1]]
+census['age_group'] = pd.cut(census['birth_year'], bins=bins, labels=labels)
+census['age_group_codes'] = census['age_group'].cat.codes
+print(census.head())
