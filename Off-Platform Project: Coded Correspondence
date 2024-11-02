@@ -1,0 +1,165 @@
+print("""
+Hey there! How have you been? I've been great! I just learned about this really cool type of cipher called a Caesar Cipher. Here's how it works: You take your message, something like "hello" and then you shift all of the letters by a certain offset. 
+
+For example, if I chose an offset of 3 and a message of "hello", I would encode my message by shifting each letter 3 places to the left with respect to the alphabet. So "h" becomes "e", "e" becomes "b", "l" becomes "i", and "o" becomes "l". Then I have my encoded message, "ebiil"! Now I can send you my message and the offset and you can decode it by shifting each letter 3 places to the right. The best thing is that Julius Caesar himself used this cipher, that's why it's called the Caesar Cipher! Isn't that so cool! Okay, now I'm going to send you a longer encoded message that you have to decode yourself!
+    
+    xuo jxuhu! jxyi yi qd unqcfbu ev q squiqh syfxuh. muhu oek qrbu je tusetu yj? y xefu ie! iudt cu q cuiiqwu rqsa myjx jxu iqcu evviuj!
+    
+This message has an offset of 10. Can you decode it?
+""")
+
+def caesar_encode(message, offset):
+    encoded_message = ""
+    for char in message:
+        if char.isalpha():  # 알파벳인지 확인
+            shift = ord('a') if char.islower() else ord('A')
+            # 문자 이동 및 알파벳 내에서 순환
+            new_char = chr((ord(char) - shift + offset) % 26 + shift)
+            encoded_message += new_char
+        else:
+            encoded_message += char  # 알파벳이 아니면 그대로 추가
+    return encoded_message
+
+def caesar_decode(message, offset):
+    decoded_message = ""
+    for char in message:
+        if char.isalpha():
+            shift = ord('a') if char.islower() else ord('A')
+            new_char = chr((ord(char) - shift - offset) % 26 + shift)
+            decoded_message += new_char
+        else:
+            decoded_message += char
+    return decoded_message
+
+# 예시 메시지
+message = "I want to be a data scientist"
+encoded_message = caesar_encode(message, 10)
+print(encoded_message)
+
+# 첫 번째 메시지 디코딩
+first_message = "jxu evviuj veh jxu iusedt cuiiqwu yi vekhjuud."
+decoded_first_message = caesar_decode(first_message, 10)
+print(decoded_first_message)
+
+# 두 번째 메시지 디코딩
+second_message = "bqdradyuzs ygxfubxq omqemd oubtqde fa oapq kagd yqeemsqe ue qhqz yadq eqogdq!"
+decoded_second_message = caesar_decode(second_message, 10)
+print(decoded_second_message)
+
+print()
+def brute_force_decode(encoded_message):
+    for offset in range(26):
+        decoded_message = caesar_decode(encoded_message, offset)
+        print(f"Offset {offset}: {decoded_message}")
+
+# Vishal의 메시지
+encoded_message = "vhfinmxkl atox kxgwxkxw tee hy maxlx hew vbiaxkl hulhexmx. px'ee atox mh kxteer lmxi ni hnk ztfx by px ptgm mh dxxi hnk fxlltzxl ltyx."
+brute_force_decode(encoded_message)
+
+def vigenere_decode(message, keyword):
+    decoded_message = []
+    keyword_repeated = (keyword * (len(message) // len(keyword) + 1))[:len(message)]
+    keyword_index = 0
+
+    for char in message:
+        if char.isalpha():
+            shift = ord(keyword_repeated[keyword_index].lower()) - ord('a')
+            shift_base = ord('a') if char.islower() else ord('A')
+            new_char = chr((ord(char) - shift_base - shift) % 26 + shift_base)
+            decoded_message.append(new_char)
+            keyword_index += 1
+        else:
+            decoded_message.append(char)
+
+    return ''.join(decoded_message)
+
+print()
+# Vishal의 메시지와 키워드
+encoded_message = "txm srom vkda gl lzlgzr qpdb? fepb ejac! ubr imn tapludwy mhfbz cza ruxzal wg zztylktoikqq!"
+keyword = "friends"
+decoded_message = vigenere_decode(encoded_message, keyword)
+print(decoded_message)
+
+def vigenere_encode(message, keyword):
+    encoded_message = []
+    keyword_repeated = (keyword * (len(message) // len(keyword) + 1))[:len(message)]
+    keyword_index = 0
+
+    for char in message:
+        if char.isalpha():
+            shift = ord(keyword_repeated[keyword_index].lower()) - ord('a')
+            shift_base = ord('a') if char.islower() else ord('A')
+            new_char = chr((ord(char) - shift_base + shift) % 26 + shift_base)
+            encoded_message.append(new_char)
+            keyword_index += 1
+        else:
+            encoded_message.append(char)
+
+    return ''.join(encoded_message)
+
+print()
+# 예시 메시지와 키워드
+message = "your message here"
+keyword = "friends"
+encoded_message = vigenere_encode(message, keyword)
+print(encoded_message)
+
+# 디코딩을 통해 원래 메시지로 돌아가는지 확인
+decoded_message = vigenere_decode(encoded_message, keyword)
+print(decoded_message)
+
+# Java나 다른언어의 암호화 라이브러리를 import
+import java.util.Base64;  
+import javax.crypto.Cipher;  
+import javax.crypto.spec.IvParameterSpec;  
+import javax.crypto.spec.SecretKeySpec;  
+  
+public class AES256 {  
+
+	# 사용할 알고리즘/블록암호화 운용 모드/패딩 선택(패딩사용안함, AES기본패딩방식 = PKCS#7)
+	public static String alg = "AES/CTR/NoPadding";  
+
+	# 암호화 기능 수행 : 입력받은 문자열을 AES256 알고리즘으로 암호화한 뒤, Base64 인코딩하여 암호화된 문자열을 반환
+	public static String encrypt(String text, String key, String iv) throws Exception {  
+	
+		# Base64로 인코딩된 문자열을 바이트 배열로 디코딩하는 부분
+		byte[] key_byte = Base64.getDecoder().decode(key);  
+		byte[] iv_byte = Base64.getDecoder().decode(iv);  
+
+		# 암호화 과정에서 사용되는 암호화 인스턴스 얻음
+		Cipher cipher = Cipher.getInstance(alg);  
+
+		# 바이트배열로부터 SecretKey 생성
+		SecretKeySpec keySpec = new SecretKeySpec(key_byte, "AES");  
+
+		# 바이트배열로부터 초기화벡터 생성
+		IvParameterSpec ivParamSpec = new IvParameterSpec(iv_byte);  
+		cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParamSpec); 
+    # 인스턴스 초기화 (암호화 모드 : Cipher.ENCRYPT_MODE)
+
+		# 입력받은 문자열을 'UTF-8'인코딩으로 변환한 후, doFinal()메서드를 통해 데이터를 암,복호화
+		byte[] encrypted = cipher.doFinal(text.getBytes("UTF-8"));  
+
+		# byte[] 타입의 암호화된 데이터를 Base64 인코딩을 수행한 후, String 형태로 반환
+		return Base64.getEncoder().encodeToString(encrypted);  
+	  
+	}  
+
+	# 복호화 기능 수행 : 암호화된 문자열을 입력받아, Base64 디코딩 및 AES256 알고리즘으로 복호화한 후, 원래 문자열을 반환
+	public static String decrypt(String cipherText, String key, String iv) throws Exception {  
+	  
+		byte[] key_byte = Base64.getDecoder().decode(key);  
+		byte[] iv_byte = Base64.getDecoder().decode(iv);  
+		  
+		Cipher cipher = Cipher.getInstance(alg);  
+		SecretKeySpec keySpec = new SecretKeySpec(key_byte, "AES");  
+		IvParameterSpec ivParamSpec = new IvParameterSpec(iv_byte);  
+		cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParamSpec);  
+		  
+		byte[] decodedBytes = Base64.getDecoder().decode(cipherText);  
+		byte[] decrypted = cipher.doFinal(decodedBytes);  
+		  
+		return new String(decrypted, "UTF-8");  
+	  
+	}  
+}
