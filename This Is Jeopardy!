@@ -1,0 +1,64 @@
+import pandas as pd
+import re
+
+pd.set_option('display.max_colwidth', -1)
+df = pd.read_csv('jeopardy.csv')
+df.columns = df.columns.str.strip()
+print(df.head())
+
+def filter_questions(dataframe, words):
+  words = [word.lower() for word in words]
+  return dataframe[dataframe['Question'].apply(lambda x: all(re.search(r'\b' + word + r'\b', x.lower()) for word in words))]
+
+words_to_filter = ['King', 'England']
+filtered_questions = filter_questions(df, words_to_filter)
+print(filtered_questions['Question'])
+
+def convert_value_to_float(value):
+  if value == "no value":
+    return 0.0
+  return float(value.replace('$', '').replace(',', ''))
+
+df['Float Value'] = df['Value'].apply(convert_value_to_float)
+
+
+def count_unique_answers(dataframe):
+  return dataframe['Answer'].value_counts()
+
+filtered_questions = filter_questions(df, ["King"])
+unique_answers_count = count_unique_answers(filtered_questions)
+print(unique_answers_count)
+
+# 예시: 90년대와 2000년대의 "Computer" 질문 수 비교
+questions_90s = df[df['Air Date'].str.contains('199')]
+questions_2000s = df[df['Air Date'].str.contains('200')]
+
+computer_90s = filter_questions(questions_90s, ["Computer"])
+computer_2000s = filter_questions(questions_2000s, ["Computer"])
+
+print(len(computer_90s), len(computer_2000s))
+
+
+# 예시: "Literature" 카테고리의 라운드별 빈도
+literature_questions = df[df['Category'].str.contains('Literature')]
+
+single_jeopardy = literature_questions[literature_questions['Round'] == 'Jeopardy!']
+double_jeopardy = literature_questions[literature_questions['Round'] == 'Double Jeopardy!']
+
+print(len(single_jeopardy), len(double_jeopardy))
+
+
+import random
+
+def quiz():
+    random_question = df.sample()
+    print(random_question['Question'].values[0])
+    user_answer = input("Your answer: ")
+    correct_answer = random_question['Answer'].values[0]
+    if user_answer.lower() == correct_answer.lower():
+        print("Correct!")
+    else:
+        print(f"Wrong! The correct answer was: {correct_answer}")
+
+# 퀴즈 실행
+quiz()
