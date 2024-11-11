@@ -1,0 +1,68 @@
+import codecademylib3_seaborn
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+# load and investigate the data here:
+df = pd.read_csv('tennis_stats.csv')
+print(df.head())
+
+# perform exploratory analysis here:
+plt.scatter(df['BreakPointsOpportunities'], df['Winnings'])
+plt.xlabel('Break Points Opportunities')
+plt.ylabel('Winnings')
+plt.title('Break Points Opportunities vs Winnings')
+plt.show()
+
+## perform single feature linear regressions here:
+features = df[['FirstServeReturnPointsWon']]
+outcome = df[['Winnings']]
+features_train, features_test, outcome_train, outcome_test = train_test_split(features, outcome, train_size = 0.8)
+
+model = LinearRegression()
+model.fit(features_train, outcome_train)
+model.score(features_test, outcome_test)
+
+prediction = model.predict(features_test)
+plt.scatter(outcome_test, prediction, alpha=0.4)
+plt.show()
+
+## perform two feature linear regressions here:
+features = df[['BreakPointsOpportunities', 'FirstServeReturnPointsWon']]
+outcome = df[['Winnings']]
+
+features_train, features_test, outcome_train, outcome_test = train_test_split(features, outcome, train_size = 0.8)
+
+model = LinearRegression()
+model.fit(features_train, outcome_train)
+model.score(features_test, outcome_test)
+
+prediction = model.predict(features_test)
+plt.scatter(outcome_test, prediction, alpha=0.4)
+plt.show()
+
+## perform multiple feature linear regressions here:
+features = df[['FirstServe','FirstServePointsWon','FirstServeReturnPointsWon',
+'SecondServePointsWon','SecondServeReturnPointsWon','Aces',
+'BreakPointsConverted','BreakPointsFaced','BreakPointsOpportunities',
+'BreakPointsSaved','DoubleFaults','ReturnGamesPlayed','ReturnGamesWon',
+'ReturnPointsWon','ServiceGamesPlayed','ServiceGamesWon','TotalPointsWon',
+'TotalServicePointsWon']]
+outcome = df[['Winnings']]
+ranking = df['Ranking']
+
+features_train, features_test, outcome_train, outcome_test, ranking_train, ranking_test = train_test_split(features, outcome, ranking, train_size = 0.8)
+
+model = LinearRegression()
+model.fit(features_train, outcome_train)
+model.score(features_test, outcome_test)
+
+prediction = model.predict(features_test)
+# 예를 들어, 'Ranking'에 따라 색상을 지정
+plt.scatter(outcome_test, prediction, c=ranking_test, cmap='viridis', alpha=0.4)
+plt.xlabel('Actual Outcome')
+plt.ylabel('Predicted Outcome')
+plt.title('Actual vs Predicted Outcomes')
+plt.colorbar(label='Ranking')
+plt.show()
