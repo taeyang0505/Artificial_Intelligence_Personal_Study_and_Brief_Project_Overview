@@ -1,0 +1,114 @@
+import seaborn
+import pandas as pd
+import numpy as np
+import codecademylib3
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import codecademylib3
+
+# Load the data
+transactions = pd.read_csv('transactions_modified.csv')
+print(transactions.head())
+print(transactions.info())
+
+# How many fraudulent transactions?
+num_fraudulent_transactions = transactions['isFraud'].sum()
+print(num_fraudulent_transactions)
+
+# Summary statistics on amount column
+transactions['amount'].describe()
+
+# Create isPayment field
+transactions['isPayment'] = np.where(transactions['type'].isin(['PAYMENT', 'DEBIT']), 1, 0)
+
+# Create isMovement field
+transactions['isMovement'] = np.where(transactions['type'].isin(['CASH_OUT', 'TRANSFER']), 1, 0)
+
+# Create accountDiff field
+transactions['accountDiff'] = abs(transactions['oldbalanceOrg'] - transactions['oldbalanceDest'])
+
+# Create features and label variables
+features = transactions[['amount', 'isPayment', 'isMovement', 'accountDiff']]
+label = transactions['isFraud']
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(features, label, test_size = 0.3, random_state = 42)
+
+# Normalize the features variables
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Fit the model to the training data
+model = LogisticRegression()
+
+model.fit(X_train_scaled, y_train)
+
+# Score the model on the training data
+training_score = model.score(X_train_scaled, y_train)
+print(training_score)
+
+# Score the model on the test data
+test_score = model.score(X_test_scaled, y_test)
+print(test_score)
+
+# Print the model coefficients
+print(model.coef_)
+
+# New transaction data
+transaction1 = np.array([123456.78, 0.0, 1.0, 54670.1])
+transaction2 = np.array([98765.43, 1.0, 0.0, 8524.75])
+transaction3 = np.array([543678.31, 1.0, 0.0, 510025.5])
+
+# Create a new transaction
+your_transaction = np.array([100000.0, 1.0, 0.0, 50000.0])
+
+# Combine new transactions into a single array
+sample_transactions = np.stack((transaction1, transaction2, transaction3, your_transaction))
+
+# Normalize the new transactions
+sample_transactions = scaler.transform(sample_transactions)
+
+# Predict fraud on the new transactions
+predictions = model.predict(sample_transactions)
+print(predictions)
+
+probabilities = model.predict_proba(sample_transactions)
+print(probabilities)
+
+# Show probabilities on the new transactions
+
+# 전체 데이터셋 로드
+transactions_full = pd.read_csv('transactions.csv')
+
+# 데이터 전처리 및 특징 생성
+transactions_full['isPayment'] = np.where(transactions_full['type'].isin(['PAYMENT', 'DEBIT']), 1, 0)
+transactions_full['isMovement'] = np.where(transactions_full['type'].isin(['CASH_OUT', 'TRANSFER']), 1, 0)
+transactions_full['accountDiff'] = abs(transactions_full['oldbalanceOrg'] - transactions_full['oldbalanceDest'])
+
+# 특징 및 레이블 정의
+features_full = transactions_full[['amount', 'isPayment', 'isMovement', 'accountDiff']]
+label_full = transactions_full['isFraud']
+
+# 데이터 분할
+X_train_full, X_test_full, y_train_full, y_test_full = train_test_split(features_full, label_full, test_size=0.3, random_state=42)
+
+# 데이터 정규화
+scaler_full = StandardScaler()
+X_train_full_scaled = scaler_full.fit_transform(X_train_full)
+X_test_full_scaled = scaler_full.transform(X_test_full)
+
+# 모델 훈련
+model_full = LogisticRegression()
+model_full.fit(X_train_full_scaled, y_train_full)
+
+# 모델 평가
+training_score_full = model_full.score(X_train_full_scaled, y_train_full)
+test_score_full = model_full.score(X_test_full_scaled, y_test_full)
+
+print(f"Training Score: {training_score_full}")
+print(f"Test Score: {test_score_full}")
+
