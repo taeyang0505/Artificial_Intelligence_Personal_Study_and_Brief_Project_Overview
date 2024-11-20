@@ -1,0 +1,126 @@
+import codecademylib3
+import seaborn as sns
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+
+#https://archive.ics.uci.edu/ml/machine-learning-databases/flags/flag.data
+cols = ['name','landmass','zone', 'area', 'population', 'language','religion','bars','stripes','colours',
+'red','green','blue','gold','white','black','orange','mainhue','circles',
+'crosses','saltires','quarters','sunstars','crescent','triangle','icon','animate','text','topleft','botright']
+df= pd.read_csv("https://archive.ics.uci.edu/ml/machine-learning-databases/flags/flag.data", names = cols)
+
+#variable names to use as predictors
+var = [ 'red', 'green', 'blue','gold', 'white', 'black', 'orange', 'mainhue','bars','stripes', 'circles','crosses', 'saltires','quarters','sunstars','triangle','animate']
+
+#Print number of countries by landmass, or continent
+print(df['landmass'].value_counts())
+
+#Create a new dataframe with only flags from Europe and Oceania
+df_36 = df[df['landmass'].isin([3,6])]
+
+#Print the average vales of the predictors for Europe and Oceania
+print(df.groupby('landmass')[var].mean())
+
+#Create labels for only Europe and Oceania
+labels = (df['landmass'].isin([3, 6]))*1
+
+#Print the variable types for the predictors
+print(df_36[var].dtypes)
+
+#Create dummy variables for categorical predictors
+data = pd.get_dummies(df[var])
+
+#Split data into a train and test set
+X_train, X_test, y_train, y_test = train_test_split(data, labels, random_state=1, test_size=0.4)
+
+#Fit a decision tree for max_depth values 1-20; save the accuracy score in acc_depth
+depths = range(1, 21)
+acc_depth = []
+
+from sklearn.metrics import accuracy_score
+
+for depth in depths:
+  # DecisionTreeClassifier 생성
+  dtree = DecisionTreeClassifier(max_depth = depth, random_state=1)
+  # 훈련 데이터로 모델 학습
+  dtree.fit(X_train, y_train)
+  # 테스트 테이터로 예측 수행
+  y_pred = dtree.predict(X_test)
+  # 정확도 계산
+  accuracy = accuracy_score(y_test, y_pred)
+  acc_depth.append(accuracy)
+
+print(depths)
+print(acc_depth)
+
+#Plot the accuracy vs depth
+plt.plot(depths, acc_depth)
+plt.xlabel('Max Depth')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs Max Depth')
+plt.show()
+
+#Find the largest accuracy and the depth this occurs
+max_acc = np.max(acc_depth)
+best_depth = depths[np.argmax(acc_depth)]
+print(f'Highest accuracy: {max_acc} at depth: {best_depth}')
+
+#Refit decision tree model with the highest accuracy and plot the decision tree
+dtree = DecisionTreeClassifier(max_depth = best_depth, random_state=1)
+dtree.fit(X_train, y_train)
+plt.figure(figsize=(14, 8))
+tree.plot_tree(dtree, feature_names = X_train.columns, class_names=['Europe', 'Oceania'], filled=True)
+plt.show()
+
+#Create a new list for the accuracy values of a pruned decision tree.  Loop through
+#the values of ccp and append the scores to the list
+acc_pruned = []
+ccp = np.logspace(-3, 0, num=20)
+
+for alpha in ccp:
+  dtree_pruned = DecisionTreeClassifier(random_state=1, max_depth = best_depth, ccp_alpha=alpha)
+  dtree_pruned.fit(X_train, y_train)
+  y_pred = dtree_pruned.predict(X_test)
+  accuracy = accuracy_score(y_test, y_pred)
+  acc_pruned.append(accuracy)
+
+#Plot the accuracy vs ccp_alpha
+plt.figure()
+plt.plot(ccp, acc_pruned)
+plt.xscale('log')
+plt.xlabel('ccp_alpha')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs ccp_alpha')
+plt.show()
+
+#Find the largest accuracy and the ccp value this occurs
+max_ccp_pruned = np.max(acc_pruned)
+best_ccp_alpha = ccp[np.argmax(acc_pruned)]
+print(f'Highest accuracy: {max_ccp_pruned} at ccp_alpha: {best_ccp_alpha}')
+
+#Fit a decision tree model with the values for max_depth and ccp_alpha found above
+final_tree = DecisionTreeClassifier(random_state = 1, max_depth = best_depth, ccp_alpha = best_ccp_alpha)
+final_tree.fit(X_train, y_train)
+
+#Plot the final decision tree
+plt.figure(figsize = (14, 8))
+tree.plot_tree(final_tree, feature_names = X_train.columns, class_names=['Europe', 'Oceania'], filled=True)
+plt.show()
+
+# "Language"를 예측하도록 labels 변경
+labels = df['language']
+
+# 상관관계 분석을 통해 유의미한 특성 선택
+correlation_matrix = df.corr()
+print(correlation_matrix['language'].sort_values(ascending=False))
+# 상관관계가 높은 특성 선택
+selected_features = ['red', 'green', 'blue']  # 예시로 상관관계가 높은 특성 선택
+data = pd.get_dummies(df[selected_features])
+
+# max_leaf_nodes를 사용하여 모델 튜닝
+final_tree = DecisionTreeClassifier(random_state=1, max_depth=best_depth, ccp_alpha=best_ccp_alpha, max_leaf_nodes=10)
+final_tree.fit(X_train, y_train)
