@@ -1,0 +1,46 @@
+import csv
+from functools import reduce
+
+def count(predicate, iterable):
+  count_filter = filter(predicate, iterable) 
+  count_reduce = reduce(lambda x, y: x + 1, count_filter, 0)
+  return count_reduce
+
+def average(itr):
+  # If itr is not iterable, this will generate an iterator.  
+  iterable = iter(itr) 
+  return avg_helper(0, iterable, 0)
+
+def avg_helper(curr_count, itr, curr_sum):
+    next_num = next(itr, "null")
+    if next_num == "null":
+        return curr_sum / curr_count
+    curr_count += 1
+    curr_sum += next_num
+    return avg_helper(curr_count, itr, curr_sum)
+
+with open('1kSalesRec.csv', newline = '') as csvfile:
+  reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+  fields = next(reader)
+  count_belgiums = count(lambda x: x[1] == "Belgium", reader) 
+  print(count_belgiums)
+  csvfile.seek(0)
+  avg_portugal = average(map(lambda x: float(x[13]) , filter(lambda x: x[1] == "Portugal", reader)))
+  print(avg_portugal)
+
+def median(data):
+    sorted_data = sorted(data)
+    n = len(sorted_data)
+    mid = n // 2
+
+    if n % 2 == 0:
+        return (sorted_data[mid - 1] + sorted_data[mid]) / 2
+    else:
+        return sorted_data[mid]
+
+import math
+
+def standard_deviation(data):
+    mean = sum(data) / len(data)
+    variance = sum((x - mean) ** 2 for x in data) / len(data)
+    return math.sqrt(variance)
