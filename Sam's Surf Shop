@@ -1,0 +1,38 @@
+# Write your code below:
+import surfshop
+import unittest
+
+class newjeans(unittest.TestCase):
+  def setUp(self):
+    self.cart = surfshop.ShoppingCart()
+
+  def testSurfboards(self):
+    for num in [2, 3, 4]:
+      with self.subTest(num=num): 
+        result = self.cart.add_surfboards(num)
+        self.assertEqual(result, f'Successfully added {num} surfboards to cart!')
+
+  @unittest.skip
+  def testManyBoards(self):
+    self.assertRaises(surfshop.TooManyBoardsError, self.cart.add_surfboards, 5) 
+
+  @unittest.expectedFailure
+  def testApplylocals(self):
+    self.cart.apply_locals_discount()
+    self.assertTrue(self.cart.locals_discount)
+
+  def test_set_checkout_date(self):
+    future_date = datetime.datetime.now() + datetime.timedelta(days=1)
+    past_date = datetime.datetime.now() - datetime.timedelta(days=1)
+    
+    # Test with future date
+    self.cart.set_checkout_date(future_date)
+    
+    # Test with past date
+    with self.assertRaises(surfshop.CheckoutDateError):
+        self.cart.set_checkout_date(past_date)
+
+
+unittest.main()
+
+
