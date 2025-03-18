@@ -1,0 +1,84 @@
+# I used kaggle data set (https://www.kaggle.com/datasets/mohansacharya/graduate-admissions)
+
+import app
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+from tensorflow	import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras import layers
+from tensorflow.keras.optimizers import Adam
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import Normalizer
+from sklearn.metrics import r2_score
+
+# loading data
+data = pd.read_csv("admissions_data.csv")
+print(data.head())
+print(data.info())
+
+# data preprocessing
+feature = data.iloc[:,1:-1]
+labels = data.iloc[:,-1]
+
+features_training_set, features_test_set,labels_training_set, labels_test_set = train_test_split(feature, labels, test_size=0.25, random_state=42)
+
+# data nomalization 
+scaler = StandardScaler()
+features_train_scaled = scaler.fit_transform(features_training_set)
+features_test_scaled = scaler.transform(features_test_set)
+
+# constructing model
+def create_model():
+  model = Sequential()
+  model.add(layers.Dense(16, activation='relu', input_shape=(features_train_scaled.shape[1],)))
+  model.add(layers.Dense(1))
+  optimizer = Adam(learning_rate=0.001)
+  model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+  return model
+
+my_model = create_model()
+
+# EarlyStopping 
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+
+# fitting model
+history = my_model.fit(features_train_scaled, labels_training_set, epochs=50, batch_size=15, validation_split=0.2, callbacks=[early_stopping],verbose=1)
+
+# testing model
+res_mse, res_mae = my_model.evaluate(features_test_scaled, labels_test_set, verbose=0)
+
+# predict model
+predicted_values = my_model.predict(features_test_scaled)
+
+# R-squared
+r_squared = r2_score(labels_test_set, predicted_values)
+print(f"R-squared: {r_squared}")
+
+fig = plt.figure()
+
+# MAE graph
+ax1 = fig.add_subplot(2, 1, 1)
+ax1.plot(history.history['mae'])
+ax1.plot(history.history['val_mae'])
+ax1.set_title('Model MAE')
+ax1.set_ylabel('MAE')
+ax1.set_xlabel('Epoch')
+ax1.legend(['Train', 'Validation'], loc='upper left')
+
+# Loss graph
+ax2 = fig.add_subplot(2, 1, 2)
+ax2.plot(history.history['loss'])
+ax2.plot(history.history['val_loss'])
+ax2.set_title('Model Loss')
+ax2.set_ylabel('Loss')
+ax2.set_xlabel('Epoch')
+ax2.legend(['Train', 'validation'], loc='upper left')
+
+fig.tight_layout()
+fig.savefig('static/images/my_plots.png')
