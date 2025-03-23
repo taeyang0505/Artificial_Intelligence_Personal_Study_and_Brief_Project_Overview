@@ -1,0 +1,105 @@
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras import layers
+
+import matplotlib.pyplot as plt
+import app
+
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+from sklearn.metrics import classification_report, confusion_matrix
+import numpy as np
+
+# ImageDataGenerator 객체 생성
+datagen = ImageDataGenerator(
+    rescale=1.0/255.0,  # 픽셀 값을 0과 1 사이로 정규화
+    rotation_range=20,  # 데이터 증강: 이미지를 최대 20도 회전
+    width_shift_range=0.2,  # 가로로 최대 20% 이동
+    height_shift_range=0.2,  # 세로로 최대 20% 이동
+    shear_range=0.2,  # 전단 변환
+    zoom_range=0.2,  # 확대/축소
+    horizontal_flip=True,  # 수평 반전
+    fill_mode='nearest'  # 빈 공간을 가장 가까운 픽셀로 채움
+)
+
+# 데이터 생성기 사용 예시
+train_generator = datagen.flow_from_directory(
+    'covid19-image-dataset/train',  # 훈련 데이터 경로
+    target_size=(150, 150),  # 이미지 크기 조정
+    batch_size=32,  # 배치 크기
+    class_mode='categorical'  # 다중 클래스 분류
+)
+
+# 검증 데이터 생성기
+validation_generator = datagen.flow_from_directory(
+    'covid19-image-dataset/test',  # 검증 데이터 경로
+    target_size=(150, 150),  # 이미지 크기 조정
+    batch_size=32,  # 배치 크기
+    class_mode='sparse'  # 다중 클래스 분류를 위한 정수 레이블
+)
+
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.callbacks import EarlyStopping
+
+# 모델 생성
+model = Sequential()
+
+# 입력층 및 은닉층 추가
+model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+
+# 출력층 추가
+model.add(Dense(3, activation='softmax'))
+
+# 모델 컴파일
+model.compile(
+    optimizer=Adam(learning_rate=0.001),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# 조기 종료 콜백
+early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+
+# 모델 훈련
+history = model.fit(
+    train_generator,
+    steps_per_epoch=train_generator.samples // train_generator.batch_size,
+    validation_data=validation_generator,
+    validation_steps=validation_generator.samples // validation_generator.batch_size,
+    epochs=10,
+    callbacks=[early_stopping]
+)
+
+# 성능 시각화
+fig = plt.figure()
+ax1 = fig.add_subplot(2, 1, 1)
+ax1.plot(history.history['accuracy'])
+ax1.plot(history.history['val_accuracy'])
+ax1.set_title('Model Accuracy')
+ax1.set_xlabel('Epoch')
+ax1.set_ylabel('Accuracy')
+ax1.legend(['Train', 'Validation'], loc='upper left')
+
+ax2 = fig.add_subplot(2, 1, 2)
+ax2.plot(history.history['loss'])
+ax2.plot(history.history['val_loss'])
+ax2.set_title('Model Loss')
+ax2.set_xlabel('Epoch')
+ax2.set_ylabel('Loss')
+ax2.legend(['Train', 'Validation'], loc='upper left')
+
+fig.tight_layout()
+fig.savefig('static/images/my_plots.png')
+
+# 예측 및 평가
+test_steps_per_epoch = np.math.ceil(validation_generator.samples / validation_generator.batch_size)
+predictions = model.predict(validation_generator, steps=test_steps_per_epoch)
+predicted_classes = np.argmax(predictions, axis=1)
+true_classes = validation_generator.classes
